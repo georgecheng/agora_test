@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Agora Test</title>
+  <style type="text/css">
+    html, body, #agoraTest {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="agoraTest"></div>
+
+  <script src="https://cdn.agora.io/sdk/release/AgoraRTCSDK-2.9.0.js"></script>
+
+  <script type="text/javascript">
+    // rtc object
+    var rtc = {
+      client: null,
+      joined: false,
+      published: false,
+      localStream: null,
+      remoteStreams: [],
+      params: {}
+    };
+
+    // Options for joining a channel
+    var option = {
+      appID: "Your App ID",
+      channel: "test_channel",
+      uid: null,
+      token: "Your token"
+    }
+
+    // Create a client
+    rtc.client = AgoraRTC.createClient({mode: "rtc", codec: "h264"});
+
+    // Initialize the client
+    rtc.client.init(option.appID, function () {
+      console.log("init success");
+      }, (err) => {
+      console.error(err);
+    });
+
+    // Join a channel
+    rtc.client.join(option.token ? option.token : null, option.channel, option.uid ? +option.uid : null, function (uid) {
+        console.log("join channel: " + option.channel + " success, uid: " + uid);
+        rtc.params.uid = uid;
+
+        // Create a local stream
+        rtc.localStream = AgoraRTC.createStream({
+          streamID: rtc.params.uid,
+          audio: true,
+          video: true,
+          screen: false,
+        })
+        // Initialize the local stream
+        rtc.localStream.init(function () {
+          console.log("init local stream success");
+
+          rtc.localStream.play("agoraTest", { fit: "contain" });
+
+          // Publish the local stream
+          rtc.client.publish(rtc.localStream, function (err) {
+            console.log("publish failed");
+            console.error(err);
+          })
+        }, function (err) {
+          console.error("init local stream failed ", err);
+        })
+      }, function(err) {
+        console.error("client join failed", err)
+    })
+  </script>
+</body>
+</html>
